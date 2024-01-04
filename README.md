@@ -7,7 +7,7 @@
 3. cd into the project root
     "cd 315pr1"
 4. Run the commands to install parcel and threeJS
-    "npm install parcel --save-dev" && "npm install three"
+    "npm install" && "npm install parcel --save-dev" && "npm install three"
 5. Start a local server using parcel
     "npx parcel src/index.html --port 3000", CTRL + C to terminate it
     (if localhost refused to connect, change the port and try again)

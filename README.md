@@ -25,7 +25,7 @@ npm install three
 6. Start a local server using parcel.
    
 ```bash
-npx parcel src/index.html --port 3000
+npx parcel src/main.html --port 3000
 ``` 
 CTRL + C to terminate it. <br>
 If localhost refused to connect, change the port and try again. </br> </br>
@@ -34,8 +34,8 @@ If localhost refused to connect, change the port and try again. </br> </br>
 9. Profit! </br> </br>
 
 ## TODO
-- [ ] Establish Solid 3D Plane.
-- [ ] Get Camera and WSAD Movements.
+- [ ] Establish Solid 2D Plane.
+- [x] Get Camera and WSAD Movements.
 - [ ] Import 3D Models.
 - [ ] Implement Collision Logic.
 - [ ] TBD...

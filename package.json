@@ -1,0 +1,26 @@
+{
+  "name": "315pr1",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "parcel index.html",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/He-Is-HaZaRdOuS/315pr1.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/He-Is-HaZaRdOuS/315pr1/issues"
+  },
+  "homepage": "https://github.com/He-Is-HaZaRdOuS/315pr1#readme",
+  "devDependencies": {
+    "parcel": "^2.11.0"
+  },
+  "dependencies": {
+    "cannon-es": "^0.20.0",
+    "three": "^0.160.0"
+  }
+}

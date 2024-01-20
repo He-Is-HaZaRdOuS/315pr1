@@ -1,8 +1,14 @@
 import * as THREE from 'three';
+import * as CANNON from 'cannon-es'
 
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
-import SurfaceTexture from '../../resources/checkerboard.png';
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 
+const spiderURL = new URL('../../resources/spider.fbx', import.meta.url);
+const catURL = new URL('../../resources/cat.fbx', import.meta.url);
+
+import SurfaceTexture from '../../resources/checkerboard.png';
 import crossHair from '../../resources/crosshair.png'
 
 import negx from '../../resources/skybox/negx.jpg';
@@ -24,7 +30,13 @@ import vintageMetallic from '../../resources/freepbr/vintage-tile1_metallic.png'
 import vintageNormal from '../../resources/freepbr/vintage-tile1_normal.png';
 import vintageRoughness from '../../resources/freepbr/vintage-tile1_roughness.png';
 
+/* Declare global vars */
 let camera, uiCamera, scene, uiScene, renderer, controls;
+let plane, box, wall1, wall2, wall3, wall4;
+let planeSkeleton, boxSkeleton, wall1Skeleton, wall2Skeleton, wall3Skeleton, wall4Skeleton;
+let planeGeometry, boxGeometry, wall1Geometry, wall2Geometry, wall3Geometry, wall4Geometry;
+let spiderModel, catModel;
+let spiderSkeleton, catSkeleton;
 
 const objects = [];
 
@@ -42,9 +54,48 @@ const direction = new THREE.Vector3();
 const vertex = new THREE.Vector3();
 const color = new THREE.Color();
 
+/* Instantiate simulated physics world */
+const world = new CANNON.World({
+  gravity: new CANNON.Vec3(0, -9.81, 0)
+});
+
+/* update time */
+const timeStep = 1 / 60;
+
 init();
 animate();
 
+/* Attach visual meshes to their physical counterparts */
+function fuseMeshWithGeometry(){
+  plane.position.copy(planeGeometry.position);
+  plane.quaternion.copy(planeGeometry.quaternion);
+
+  box.position.copy(boxGeometry.position);
+  box.quaternion.copy(boxGeometry.quaternion);
+  boxSkeleton.position.copy(boxGeometry.position);
+  boxSkeleton.quaternion.copy(boxGeometry.quaternion);
+
+  wall1.position.copy(wall1Geometry.position);
+  wall1.quaternion.copy(wall1Geometry.quaternion);
+
+  wall2.position.copy(wall2Geometry.position);
+  wall2.quaternion.copy(wall2Geometry.quaternion);
+
+  wall3.position.copy(wall3Geometry.position);
+  wall3.quaternion.copy(wall3Geometry.quaternion);
+
+  wall4.position.copy(wall4Geometry.position);
+  wall4.quaternion.copy(wall4Geometry.quaternion);
+
+  spiderModel.position.copy(spiderSkeleton.position);
+  spiderModel.quaternion.copy(spiderSkeleton.quaternion);
+
+  catModel.position.copy(catSkeleton.position);
+  catModel.quaternion.copy(catSkeleton.quaternion);
+
+}
+
+/* Load maps and return material */
 function loadMaterial(name, tiling) {
   const mapLoader = new THREE.TextureLoader();
   let metalMap, albedo, normalMap, roughtnessMap;
@@ -129,75 +180,162 @@ function initScene(){
     negz,
   ]);
   scene.background = texture;
+  /* texture loader obj */ 
   const mapLoader = new THREE.TextureLoader();
+  /* load surface texture (Checkerboard pattern) */
   const surface = mapLoader.load(SurfaceTexture);
   surface.wrapS = THREE.RepeatWrapping;
   surface.wrapT = THREE.RepeatWrapping;
   surface.repeat.set(32, 32);
 
-  const plane = new THREE.Mesh(
+  /* Instantiate a 2D plane mesh */
+  plane = new THREE.Mesh(
   new THREE.PlaneGeometry(1000, 1000, 100, 100 ),
   new THREE.MeshStandardMaterial({map: surface}));
   plane.castShadow = false;
   plane.receiveShadow = true;
-  plane.rotation.x = -Math.PI / 2;
   scene.add(plane);
 
-  const box = new THREE.Mesh(
+  /* Instantiate solid 2D plane geometry */
+  planeGeometry = new CANNON.Body({
+    //shape: new CANNON.Plane(),
+    shape: new CANNON.Plane(),
+    //mass: 10,
+    type: CANNON.Body.STATIC,
+  });
+  world.addBody(planeGeometry);
+  /* Align to X axis */
+  planeGeometry.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+
+  /* Instantiate box */
+  box = new THREE.Mesh(
   new THREE.BoxGeometry(20, 20, 20),
   loadMaterial('vintage-tile1_', 0.2));
-  box.position.set(0, 10, 0);
   box.castShadow = true;
   box.receiveShadow = true;
   scene.add(box);
 
+  boxGeometry = new CANNON.Body({
+    shape: new CANNON.Box(new CANNON.Vec3(10, 10, 10)),
+    mass: 10,
+    position: new CANNON.Vec3(0, 100, 0),
+    //type: CANNON.Body.STATIC,
+  });
+  world.addBody(boxGeometry);
+
   const concreteMaterial = loadMaterial('concrete3-', 4);
 
-  const wall1 = new THREE.Mesh(
-  new THREE.BoxGeometry(1000, 30, 4),
+  /* Instantiate world borders (walls) */
+  wall1 = new THREE.Mesh(
+  new THREE.BoxGeometry(1000, 60, 4),
   concreteMaterial);
   wall1.position.set(0, 0, -500);
   wall1.castShadow = true;
   wall1.receiveShadow = true;
   scene.add(wall1);
 
-  const wall2 = new THREE.Mesh(
-  new THREE.BoxGeometry(1000, 30, 4),
+  wall1Geometry = new CANNON.Body({
+    shape: new CANNON.Box(new CANNON.Vec3(500, 30, 2)),
+    position: new CANNON.Vec3(0, 0, -500),
+    type: CANNON.Body.STATIC,
+  });
+  world.addBody(wall1Geometry);
+
+  wall2 = new THREE.Mesh(
+  new THREE.BoxGeometry(1000, 60, 4),
   concreteMaterial);
   wall2.position.set(0, 0, 500);
   wall2.castShadow = true;
   wall2.receiveShadow = true;
   scene.add(wall2);
 
-  const wall3 = new THREE.Mesh(
-  new THREE.BoxGeometry(4, 30, 1000),
+  wall2Geometry = new CANNON.Body({
+    shape: new CANNON.Box(new CANNON.Vec3(500, 30, 2)),
+    position: new CANNON.Vec3(0, 0, 500),
+    type: CANNON.Body.STATIC,
+  });
+  world.addBody(wall2Geometry);
+
+  wall3 = new THREE.Mesh(
+  new THREE.BoxGeometry(4, 60, 1000),
   concreteMaterial);
   wall3.position.set(500, 0, 0);
   wall3.castShadow = true;
   wall3.receiveShadow = true;
   scene.add(wall3);
 
-  const wall4 = new THREE.Mesh(
-  new THREE.BoxGeometry(4, 30, 1000),
+  wall3Geometry = new CANNON.Body({
+    shape: new CANNON.Box(new CANNON.Vec3(2, 30, 500)),
+    position: new CANNON.Vec3(500, 0, 0),
+    type: CANNON.Body.STATIC,
+  });
+  world.addBody(wall3Geometry);
+
+  wall4 = new THREE.Mesh(
+  new THREE.BoxGeometry(4, 60, 1000),
   concreteMaterial);
   wall4.position.set(-500, 0, 0);
   wall4.castShadow = true;
   wall4.receiveShadow = true;
   scene.add(wall4);
 
+  wall4Geometry = new CANNON.Body({
+    shape: new CANNON.Box(new CANNON.Vec3(2, 30, 500)),
+    position: new CANNON.Vec3(-500, 0, 0),
+    type: CANNON.Body.STATIC,
+  });
+  world.addBody(wall4Geometry);
+
   // Create Box3 for each mesh in the scene so that we can
   // do some easy intersection tests.
   const meshes = [
   plane, box, wall1, wall2, wall3, wall4];
 
-  this.objects_ = [];
+  // BIG BOX IN THE MIDDLE COLLIDER IDK
+  const boxG = new THREE.BoxGeometry( 20, 20, 20 );
+  boxSkeleton = new THREE.Mesh(boxG)
+  objects.push(boxSkeleton);
 
+  const assetLoaderGLTF = new GLTFLoader();
+  const assetLoaderFBX = new FBXLoader();
 
-  for (let i = 0; i < meshes.length; ++i) {
-  const b = new THREE.Box3();
-  b.setFromObject(meshes[i]);
-  this.objects_.push(b);
-  }
+  assetLoaderFBX.load(spiderURL.href, function(fbx){
+    spiderModel = fbx;
+    scene.add(spiderModel);
+    //spiderModel.position.set(-55, 0, -55);
+    //console.log("loaded!!!");
+  }, (xhr) => {
+    console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+  }, function(error){
+    console.error(error);
+  });
+
+  assetLoaderFBX.load(catURL.href, function(fbx){
+    catModel = fbx;
+    scene.add(catModel);
+    //catModel.position.set(-40, 0, -55);
+    //console.log("loaded!!!");
+  }, (xhr) => {
+    console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+  }, function(error){
+    console.error(error);
+  });
+
+  /* physical spider model */
+  spiderSkeleton = new CANNON.Body({
+    shape: new CANNON.Box(new CANNON.Vec3(5, 1, 5)),
+    position: new CANNON.Vec3(-55, 100, -40),
+    mass: 10,
+  });
+  world.addBody(spiderSkeleton);
+
+  /* physical cat model */ 
+  catSkeleton = new CANNON.Body({
+    shape: new CANNON.Box(new CANNON.Vec3(5, 1, 5)),
+    position: new CANNON.Vec3(-55, 10, -45),
+    mass: 10,
+  });
+  world.addBody(catSkeleton);
 
   // Crosshair
   const crosshair = mapLoader.load(crossHair);
@@ -439,17 +577,24 @@ function animate() {
 
   if ( controls.isLocked === true ) {
 
+    world.step(timeStep);
+    fuseMeshWithGeometry();
+
     raycaster.ray.origin.copy( controls.getObject().position );
     raycaster.ray.origin.y -= 10;
 
     const intersections = raycaster.intersectObjects( objects, false );
 
-    const onObject = intersections.length > 0;
+    let onObject;
+    if(intersections.length > 0){
+      onObject = true;
+
+    }
 
     const delta = ( time - prevTime ) / 1000;
 
-    velocity.x -= velocity.x * 10.0 * delta;
-    velocity.z -= velocity.z * 10.0 * delta;
+    velocity.x -= velocity.x * 2.0 * delta;
+    velocity.z -= velocity.z * 2.0 * delta;
 
     velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
 
@@ -461,7 +606,6 @@ function animate() {
     if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
 
     if ( onObject === true ) {
-
       velocity.y = Math.max( 0, velocity.y );
       canJump = true;
 
@@ -470,7 +614,26 @@ function animate() {
     controls.moveRight( - velocity.x * delta );
     controls.moveForward( - velocity.z * delta );
 
+    /* Bound camera to map edges */
+    if(controls.getObject().position.x >= 490){
+      controls.getObject().position.x = 490;
+    }
+
+    if(controls.getObject().position.x <= -490){
+      controls.getObject().position.x = -490;
+    }
+
+    
+    if(controls.getObject().position.z >= 490){
+      controls.getObject().position.z = 490;
+    }
+
+    if(controls.getObject().position.z <= -490){
+      controls.getObject().position.z = -490;
+    }
+
     controls.getObject().position.y += ( velocity.y * delta ); // new behavior
+    //console.log(controls.getObject().position);
 
     if ( controls.getObject().position.y < 10 ) {
 

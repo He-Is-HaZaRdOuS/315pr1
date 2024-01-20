@@ -34,8 +34,8 @@ If localhost refused to connect, change the port and try again. </br> </br>
 9. Profit! </br> </br>
 
 ## TODO
-- [ ] Establish Solid 2D Plane.
+- [x] Establish Solid 2D Plane.
 - [x] Get Camera and WSAD Movements.
-- [ ] Import 3D Models.
-- [ ] Implement Collision Logic.
+- [x] Import 3D Models.
+- [x] Implement Collision Logic.
 - [ ] TBD...

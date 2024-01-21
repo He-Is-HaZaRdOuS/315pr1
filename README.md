@@ -39,3 +39,24 @@ If localhost refused to connect, change the port and try again. </br> </br>
 - [x] Import 3D Models.
 - [x] Implement Collision Logic.
 - [ ] TBD...
+
+## Group Members
+- 21050141038 Yousif Harith Suhail Suhail </br>
+- 20050141056 Firuza Rahimova </br>
+- 18050111038 Murat Ergin </br>
+
+## Game Description
+The game is set in a floating sandbox </br>
+The floor is filled with cats and spiders </br>
+The player is tasked with the objective of catching all the cats while avoiding the spiders </br>
+Failure to do so will result in a "Game Over" screen </br>
+Otherwise the Win Exit condition is satisfied </br>
+
+## Tech
+Three.js and Cannon.js were used to create the sandbox </br>
+Cat and Spider models were created personally </br>
+Several other assests were found online along with their respective (albedo, roughness, metallic, normal,...) maps </br>
+A seamless skybox was used </br>
+HemiSphericLight and Spotlight are used to illuminate the world </br>
+Entities and Surface objects have fully-integrated physics systems courtesy of Cannon.js </br>
+Debug mode showing the wireframe hitbox of entities is included for funsies </br>

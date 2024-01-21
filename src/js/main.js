@@ -721,6 +721,7 @@ function animate() {
   if( !EXIT && score >= numberOfAnimals){
     controls.lock();
     EXIT = true;
+    score_html.textContent = "Score: " + numberOfAnimals;
     blocker_won.style.display = 'block';
     instructions_won.style.display = '';
     console.log("YOU WON!");
@@ -728,6 +729,7 @@ function animate() {
   if( !EXIT && health <= 0){
     controls.lock();
     EXIT = true; 
+    health_html.textContent = "Health: " + 0;
     blocker_lost.style.display = 'block';
     instructions_lost.style.display = '';
     console.log("YOU LOST!");

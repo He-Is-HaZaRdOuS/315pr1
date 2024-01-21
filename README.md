@@ -14,11 +14,11 @@ https://linuxize.com/post/how-to-install-node-js-on-ubuntu-20-04/ </br> </br>
 cd 315pr1
 ```
 </br>
-5. Run the commands below to install parcel and three.JS.
+5. Run the commands below to install dependencies.
 
 ```bash
-npm install
-npm install parcel --save-dev
+npm install cannon-es
+npm install parcel
 npm install three
 ```
 </br>

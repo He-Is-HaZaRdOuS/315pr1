@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import * as CANNON from 'cannon-es'
 
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
-import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 
 const spiderURL = new URL('../../resources/spider.fbx', import.meta.url);
@@ -31,16 +30,51 @@ import vintageNormal from '../../resources/freepbr/vintage-tile1_normal.png';
 import vintageRoughness from '../../resources/freepbr/vintage-tile1_roughness.png';
 
 /* Declare global vars */
+let raycaster;
 let camera, uiCamera, scene, uiScene, renderer, controls;
 let plane, box, wall1, wall2, wall3, wall4;
+let planeSize, cubeSize;
+let HWallHeight, HWallWidth, HWallDepth;
+let VWallHeight, VWallWidth, VWallDepth;
 let planeSkeleton, boxSkeleton, wall1Skeleton, wall2Skeleton, wall3Skeleton, wall4Skeleton;
 let planeGeometry, boxGeometry, wall1Geometry, wall2Geometry, wall3Geometry, wall4Geometry;
 let spiderModel, catModel;
 let spiderSkeleton, catSkeleton;
+let spiderGeometry, catGeometry;
+let spiderMaterial, catMaterial;
+let spiderWireFrame, catWireFrame;
+let spiderHeight, spiderWidth, spiderDepth;
+let catHeight, catWidth, catDepth;
+let playerModel, playerSkeleton;
+let playerHeight, playerWidth, playerDepth;
+
+playerHeight = 10;
+playerWidth = 5;
+playerDepth = 5;
 
 const objects = [];
 
-let raycaster;
+/* Assign values to vars */
+let DEBUG_MODE = false;
+
+let verticalJumpVelocityOffset = 250;
+
+planeSize = 1000;
+cubeSize = 20;
+
+HWallWidth = 1000;
+HWallHeight = 60;
+HWallDepth = 4;
+VWallWidth = 4;
+VWallHeight = 60;
+VWallDepth = 1000;
+
+spiderWidth = 7;
+spiderHeight = 2;
+spiderDepth = 5;
+catWidth = 3;
+catHeight = 4;
+catDepth = 10;
 
 let moveForward = false;
 let moveBackward = false;
@@ -88,17 +122,33 @@ function fuseMeshWithGeometry(){
   wall4.quaternion.copy(wall4Geometry.quaternion);
 
   spiderModel.position.copy(spiderSkeleton.position);
+  spiderModel.position.y-= spiderHeight / 2;
   spiderModel.quaternion.copy(spiderSkeleton.quaternion);
 
   catModel.position.copy(catSkeleton.position);
+  catModel.position.y-= catHeight / 2;
   catModel.quaternion.copy(catSkeleton.quaternion);
+
+  spiderWireFrame.position.copy(spiderSkeleton.position);
+  spiderWireFrame.quaternion.copy(spiderSkeleton.quaternion);
+
+  catWireFrame.position.copy(catSkeleton.position);
+  catWireFrame.quaternion.copy(catSkeleton.quaternion);
+
+  playerModel.position.copy(playerSkeleton.position);
+  playerModel.quaternion.copy(playerSkeleton.quaternion);
+
+  playerSkeleton.position.copy(controls.getObject().position);
+  playerSkeleton.position.y = controls.getObject().position.y-10;
+  //playerSkeleton.quaternion.copy(controls.getObject().quaternion);
+  
 
 }
 
 /* Load maps and return material */
 function loadMaterial(name, tiling) {
   const mapLoader = new THREE.TextureLoader();
-  let metalMap, albedo, normalMap, roughtnessMap;
+  let metalMap, albedo, normalMap, roughnessMap;
   if(name == 'concrete3-'){
     metalMap = mapLoader.load(concreteMetallic);
     metalMap.wrapS = THREE.RepeatWrapping;
@@ -145,12 +195,12 @@ function loadMaterial(name, tiling) {
     roughnessMap.repeat.set(tiling, tiling);
   }
 
-
   const material = new THREE.MeshStandardMaterial({
   metalnessMap: metalMap,
   map: albedo,
   normalMap: normalMap,
   roughnessMap: roughnessMap,
+  //wireframe: true,
   });
 
   return material;
@@ -163,6 +213,8 @@ function initCamera(){
   const far = 2500.0;
   camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   camera.position.set(-25, 2, 25);
+
+  /* seperate camera instance to render HUD elements */
   uiCamera = new THREE.OrthographicCamera(
     -1, 1, 1 * aspect, -1 * aspect, 1, 1000);
 }
@@ -171,6 +223,7 @@ function initScene(){
   scene = new THREE.Scene();
   uiScene = new THREE.Scene();
   const cubeMapLoader = new THREE.CubeTextureLoader();
+  /* Load skybox textures */
   const texture = cubeMapLoader.load([
     posx,
     negx,
@@ -190,7 +243,7 @@ function initScene(){
 
   /* Instantiate a 2D plane mesh */
   plane = new THREE.Mesh(
-  new THREE.PlaneGeometry(1000, 1000, 100, 100 ),
+  new THREE.PlaneGeometry(planeSize, planeSize, 100, 100 ),
   new THREE.MeshStandardMaterial({map: surface}));
   plane.castShadow = false;
   plane.receiveShadow = true;
@@ -209,25 +262,41 @@ function initScene(){
 
   /* Instantiate box */
   box = new THREE.Mesh(
-  new THREE.BoxGeometry(20, 20, 20),
+  new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize),
   loadMaterial('vintage-tile1_', 0.2));
   box.castShadow = true;
   box.receiveShadow = true;
   scene.add(box);
+  //box.material.wireframe = true;
 
   boxGeometry = new CANNON.Body({
-    shape: new CANNON.Box(new CANNON.Vec3(10, 10, 10)),
+    shape: new CANNON.Box(new CANNON.Vec3(cubeSize / 2, cubeSize / 2, cubeSize / 2)),
     mass: 10,
     position: new CANNON.Vec3(0, 100, 0),
     //type: CANNON.Body.STATIC,
   });
   world.addBody(boxGeometry);
 
+  playerModel = new THREE.Mesh(
+    new THREE.BoxGeometry(playerWidth, playerHeight, playerDepth),
+    new THREE.MeshBasicMaterial({color: 0xFCBA03,})
+  );
+  playerModel.castShadow = true;
+  playerModel.receiveShadow = true;
+  scene.add(playerModel);
+
+  playerSkeleton = new CANNON.Body({
+    shape: new CANNON.Box(new CANNON.Vec3(playerWidth / 2, playerHeight / 2, playerDepth / 2)),
+    //mass: 100,
+    type: CANNON.STATIC,
+  });
+  world.addBody(playerSkeleton);
+
   const concreteMaterial = loadMaterial('concrete3-', 4);
 
   /* Instantiate world borders (walls) */
   wall1 = new THREE.Mesh(
-  new THREE.BoxGeometry(1000, 60, 4),
+  new THREE.BoxGeometry(HWallWidth, HWallHeight, HWallDepth),
   concreteMaterial);
   wall1.position.set(0, 0, -500);
   wall1.castShadow = true;
@@ -235,14 +304,14 @@ function initScene(){
   scene.add(wall1);
 
   wall1Geometry = new CANNON.Body({
-    shape: new CANNON.Box(new CANNON.Vec3(500, 30, 2)),
+    shape: new CANNON.Box(new CANNON.Vec3(HWallWidth / 2, HWallHeight / 2, HWallDepth / 2)),
     position: new CANNON.Vec3(0, 0, -500),
     type: CANNON.Body.STATIC,
   });
   world.addBody(wall1Geometry);
 
   wall2 = new THREE.Mesh(
-  new THREE.BoxGeometry(1000, 60, 4),
+  new THREE.BoxGeometry(HWallWidth, HWallHeight, HWallDepth),
   concreteMaterial);
   wall2.position.set(0, 0, 500);
   wall2.castShadow = true;
@@ -250,14 +319,14 @@ function initScene(){
   scene.add(wall2);
 
   wall2Geometry = new CANNON.Body({
-    shape: new CANNON.Box(new CANNON.Vec3(500, 30, 2)),
+    shape: new CANNON.Box(new CANNON.Vec3(HWallWidth / 2, HWallHeight / 2, HWallDepth / 2)),
     position: new CANNON.Vec3(0, 0, 500),
     type: CANNON.Body.STATIC,
   });
   world.addBody(wall2Geometry);
 
   wall3 = new THREE.Mesh(
-  new THREE.BoxGeometry(4, 60, 1000),
+  new THREE.BoxGeometry(VWallWidth, VWallHeight, VWallDepth),
   concreteMaterial);
   wall3.position.set(500, 0, 0);
   wall3.castShadow = true;
@@ -265,14 +334,14 @@ function initScene(){
   scene.add(wall3);
 
   wall3Geometry = new CANNON.Body({
-    shape: new CANNON.Box(new CANNON.Vec3(2, 30, 500)),
+    shape: new CANNON.Box(new CANNON.Vec3(VWallWidth / 2, VWallHeight / 2, VWallDepth / 2)),
     position: new CANNON.Vec3(500, 0, 0),
     type: CANNON.Body.STATIC,
   });
   world.addBody(wall3Geometry);
 
   wall4 = new THREE.Mesh(
-  new THREE.BoxGeometry(4, 60, 1000),
+  new THREE.BoxGeometry(VWallWidth, VWallHeight, VWallDepth),
   concreteMaterial);
   wall4.position.set(-500, 0, 0);
   wall4.castShadow = true;
@@ -280,7 +349,7 @@ function initScene(){
   scene.add(wall4);
 
   wall4Geometry = new CANNON.Body({
-    shape: new CANNON.Box(new CANNON.Vec3(2, 30, 500)),
+    shape: new CANNON.Box(new CANNON.Vec3(VWallWidth / 2, VWallHeight / 2, VWallDepth / 2)),
     position: new CANNON.Vec3(-500, 0, 0),
     type: CANNON.Body.STATIC,
   });
@@ -292,11 +361,10 @@ function initScene(){
   plane, box, wall1, wall2, wall3, wall4];
 
   // BIG BOX IN THE MIDDLE COLLIDER IDK
-  const boxG = new THREE.BoxGeometry( 20, 20, 20 );
+  const boxG = new THREE.BoxGeometry( cubeSize, cubeSize, cubeSize );
   boxSkeleton = new THREE.Mesh(boxG)
   objects.push(boxSkeleton);
 
-  const assetLoaderGLTF = new GLTFLoader();
   const assetLoaderFBX = new FBXLoader();
 
   assetLoaderFBX.load(spiderURL.href, function(fbx){
@@ -321,9 +389,27 @@ function initScene(){
     console.error(error);
   });
 
+  /* construct basic wireframes to use when debugging */
+  spiderGeometry = new THREE.BoxGeometry(spiderWidth, spiderHeight, spiderDepth);
+  catGeometry = new THREE.BoxGeometry(catWidth, catHeight, catDepth);
+
+  spiderMaterial = new THREE.MeshBasicMaterial({
+    color: 0x00FFFF, //cyan
+    wireframe: true,
+  });
+  catMaterial = new THREE.MeshBasicMaterial({
+    color: 0x32CD32, //lime green
+    wireframe: true,
+  });
+
+  spiderWireFrame = new THREE.Mesh(spiderGeometry, spiderMaterial);
+  catWireFrame = new THREE.Mesh(catGeometry, catMaterial);
+
+  scene.add(spiderWireFrame, catWireFrame);
+
   /* physical spider model */
   spiderSkeleton = new CANNON.Body({
-    shape: new CANNON.Box(new CANNON.Vec3(5, 1, 5)),
+    shape: new CANNON.Box(new CANNON.Vec3(spiderWidth / 2, spiderHeight / 2, spiderDepth / 2)),
     position: new CANNON.Vec3(-55, 100, -40),
     mass: 10,
   });
@@ -331,7 +417,7 @@ function initScene(){
 
   /* physical cat model */ 
   catSkeleton = new CANNON.Body({
-    shape: new CANNON.Box(new CANNON.Vec3(5, 1, 5)),
+    shape: new CANNON.Box(new CANNON.Vec3(catWidth / 2, catHeight / 2, catDepth / 2)),
     position: new CANNON.Vec3(-55, 10, -45),
     mass: 10,
   });
@@ -376,40 +462,7 @@ function initLight(){
   scene.add(light);
 }
 
-
-function init() {
-  initCamera();
-  initScene();
-  initLight();
-
-
-  controls = new PointerLockControls( camera, document.body );
-
-  const blocker = document.getElementById( 'blocker' );
-  const instructions = document.getElementById( 'instructions' );
-
-  instructions.addEventListener( 'click', function () {
-
-    controls.lock();
-
-  } );
-
-  controls.addEventListener( 'lock', function () {
-
-    instructions.style.display = 'none';
-    blocker.style.display = 'none';
-
-  } );
-
-  controls.addEventListener( 'unlock', function () {
-
-    blocker.style.display = 'block';
-    instructions.style.display = '';
-
-  } );
-
-  scene.add( controls.getObject() );
-
+function pollInput(){
   const onKeyDown = function ( event ) {
 
     switch ( event.code ) {
@@ -435,10 +488,14 @@ function init() {
         break;
 
       case 'Space':
-        if ( canJump === true ) velocity.y += 250;
+        if ( canJump === true ) velocity.y += verticalJumpVelocityOffset;
         canJump = false;
         break;
-
+        
+      case 'KeyH':
+        DEBUG_MODE = !DEBUG_MODE;
+        console.log("Toggling Debug Mode \n");
+        break;
     }
 
   };
@@ -473,99 +530,68 @@ function init() {
 
   document.addEventListener( 'keydown', onKeyDown );
   document.addEventListener( 'keyup', onKeyUp );
+}
+
+/* resize window */
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize( window.innerWidth, window.innerHeight );
+}
+
+function debugMode(){
+  //console.log(DEBUG_MODE);
+  if(!DEBUG_MODE){
+    scene.remove(catWireFrame, spiderWireFrame);
+  }
+  else{
+    scene.add(catWireFrame, spiderWireFrame);
+  }
+
+}
+
+function init() {
+  initCamera();
+  initScene();
+  initLight();
+  pollInput();
+
+  controls = new PointerLockControls( camera, document.body );
+  /* Focus and Unfocus game window */ 
+  {
+    const blocker = document.getElementById( 'blocker' );
+    const instructions = document.getElementById( 'instructions' );
+
+    /* start/focus game */
+    instructions.addEventListener( 'click', function () {
+      controls.lock();
+    } );
+
+    /* unpause/focus game */
+    controls.addEventListener( 'lock', function () {
+      instructions.style.display = 'none';
+      blocker.style.display = 'none';
+    } );
+
+    /* pause/unfocus game */
+    controls.addEventListener( 'unlock', function () {
+      blocker.style.display = 'block';
+      instructions.style.display = '';
+    } );
+
+    scene.add( controls.getObject() );
+  }
 
   raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
 
-  // floor
-/*
-  let floorGeometry = new THREE.PlaneGeometry( 2000, 2000, 100, 100 );
-  floorGeometry.rotateX( - Math.PI / 2 );
-
-  // vertex displacement
-
-  let position = floorGeometry.attributes.position;
-
-  for ( let i = 0, l = position.count; i < l; i ++ ) {
-
-    vertex.fromBufferAttribute( position, i );
-
-    vertex.x += Math.random() * 20 - 10;
-    vertex.y += Math.random() * 2;
-    vertex.z += Math.random() * 20 - 10;
-
-    position.setXYZ( i, vertex.x, vertex.y, vertex.z );
-
-  }
-
-  floorGeometry = floorGeometry.toNonIndexed(); // ensure each face has unique vertices
-
-  position = floorGeometry.attributes.position;
-  const colorsFloor = [];
-
-  for ( let i = 0, l = position.count; i < l; i ++ ) {
-
-    color.setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75, THREE.SRGBColorSpace );
-    colorsFloor.push( color.r, color.g, color.b );
-
-  }
-
-  floorGeometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colorsFloor, 3 ) );
-
-  const floorMaterial = new THREE.MeshBasicMaterial( { vertexColors: true } );
-
-  const floor = new THREE.Mesh( floorGeometry, floorMaterial );
-  scene.add( floor );
-*/
-  // objects
-/*
-  const boxGeometry = new THREE.BoxGeometry( 20, 20, 20 ).toNonIndexed();
-
-  position = boxGeometry.attributes.position;
-  const colorsBox = [];
-
-  for ( let i = 0, l = position.count; i < l; i ++ ) {
-
-    color.setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75, THREE.SRGBColorSpace );
-    colorsBox.push( color.r, color.g, color.b );
-
-  }
-
-  boxGeometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colorsBox, 3 ) );
-
-  for ( let i = 0; i < 500; i ++ ) {
-
-    const boxMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, flatShading: true, vertexColors: true } );
-    boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75, THREE.SRGBColorSpace );
-
-    const box = new THREE.Mesh( boxGeometry, boxMaterial );
-    box.position.x = Math.floor( Math.random() * 20 - 10 ) * 20;
-    box.position.y = Math.floor( Math.random() * 20 ) * 20 + 10;
-    box.position.z = Math.floor( Math.random() * 20 - 10 ) * 20;
-
-    scene.add( box );
-    objects.push( box );
-
-  }
-*/
-  //
-
+  /* set additional renderer properties */
   renderer = new THREE.WebGLRenderer( { antialias: true } );
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( window.innerWidth, window.innerHeight );
   document.body.appendChild( renderer.domElement );
 
-  //
-
+  /* attach window resizer function to event listener */
   window.addEventListener( 'resize', onWindowResize );
-
-}
-
-function onWindowResize() {
-
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize( window.innerWidth, window.innerHeight );
 
 }
 
@@ -579,6 +605,7 @@ function animate() {
 
     world.step(timeStep);
     fuseMeshWithGeometry();
+    debugMode();
 
     raycaster.ray.origin.copy( controls.getObject().position );
     raycaster.ray.origin.y -= 10;
@@ -615,21 +642,21 @@ function animate() {
     controls.moveForward( - velocity.z * delta );
 
     /* Bound camera to map edges */
-    if(controls.getObject().position.x >= 490){
-      controls.getObject().position.x = 490;
+    if(controls.getObject().position.x >= 495){
+      controls.getObject().position.x = 495;
     }
 
-    if(controls.getObject().position.x <= -490){
-      controls.getObject().position.x = -490;
+    if(controls.getObject().position.x <= -495){
+      controls.getObject().position.x = -495;
     }
 
     
-    if(controls.getObject().position.z >= 490){
-      controls.getObject().position.z = 490;
+    if(controls.getObject().position.z >= 495){
+      controls.getObject().position.z = 495;
     }
 
-    if(controls.getObject().position.z <= -490){
-      controls.getObject().position.z = -490;
+    if(controls.getObject().position.z <= -495){
+      controls.getObject().position.z = -495;
     }
 
     controls.getObject().position.y += ( velocity.y * delta ); // new behavior

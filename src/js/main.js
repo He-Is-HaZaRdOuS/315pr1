@@ -38,11 +38,6 @@ let HWallHeight, HWallWidth, HWallDepth;
 let VWallHeight, VWallWidth, VWallDepth;
 let planeSkeleton, boxSkeleton, wall1Skeleton, wall2Skeleton, wall3Skeleton, wall4Skeleton;
 let planeGeometry, boxGeometry, wall1Geometry, wall2Geometry, wall3Geometry, wall4Geometry;
-<<<<<<< HEAD
-=======
-let spiderModel, catModel;
-let spiderSkeleton, catSkeleton;
->>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
 let spiderGeometry, catGeometry;
 let spiderMaterial, catMaterial;
 let spiderWireFrame, catWireFrame;
@@ -51,7 +46,6 @@ let catHeight, catWidth, catDepth;
 let playerModel, playerSkeleton;
 let playerHeight, playerWidth, playerDepth;
 
-<<<<<<< HEAD
 let numberOfAnimals = 20;
 
 let mapEdge;
@@ -77,24 +71,13 @@ const spiderMovements = [];
 const spiderSkeletons = [];
 const spiderWireframes = [];
 
-=======
-playerHeight = 10;
-playerWidth = 5;
-playerDepth = 5;
-
-const objects = [];
-
->>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
 /* Assign values to vars */
 let DEBUG_MODE = false;
 
 let verticalJumpVelocityOffset = 250;
 
 planeSize = 1000;
-<<<<<<< HEAD
 mapEdge = (planeSize / 2) - 10;
-=======
->>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
 cubeSize = 20;
 
 HWallWidth = 1000;
@@ -156,7 +139,6 @@ function fuseMeshWithGeometry(){
   wall4.position.copy(wall4Geometry.position);
   wall4.quaternion.copy(wall4Geometry.quaternion);
 
-<<<<<<< HEAD
   playerModel.position.copy(playerSkeleton.position);
   playerModel.quaternion.copy(playerSkeleton.quaternion);
 
@@ -178,29 +160,6 @@ function fuseMeshWithGeometry(){
     spiderWireframes[i].position.copy(spiderSkeletons[i].position);
     spiderWireframes[i].quaternion.copy(spiderSkeletons[i].quaternion);
   }
-=======
-  spiderModel.position.copy(spiderSkeleton.position);
-  spiderModel.position.y-= spiderHeight / 2;
-  spiderModel.quaternion.copy(spiderSkeleton.quaternion);
-
-  catModel.position.copy(catSkeleton.position);
-  catModel.position.y-= catHeight / 2;
-  catModel.quaternion.copy(catSkeleton.quaternion);
->>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
-
-  spiderWireFrame.position.copy(spiderSkeleton.position);
-  spiderWireFrame.quaternion.copy(spiderSkeleton.quaternion);
-
-  catWireFrame.position.copy(catSkeleton.position);
-  catWireFrame.quaternion.copy(catSkeleton.quaternion);
-
-  playerModel.position.copy(playerSkeleton.position);
-  playerModel.quaternion.copy(playerSkeleton.quaternion);
-
-  playerSkeleton.position.copy(controls.getObject().position);
-  playerSkeleton.position.y = controls.getObject().position.y-10;
-  //playerSkeleton.quaternion.copy(controls.getObject().quaternion);
-  
 
 }
 
@@ -472,7 +431,6 @@ function initScene(){
     console.error(error);
   });
 
-<<<<<<< HEAD
     /* construct basic wireframes to use when debugging */
     spiderGeometry = new THREE.BoxGeometry(spiderWidth, spiderHeight, spiderDepth);
     catGeometry = new THREE.BoxGeometry(catWidth, catHeight, catDepth);
@@ -500,8 +458,9 @@ function initScene(){
 
     world.addBody(spiderSkeleton);
     spiderSkeletons.push(spiderSkeleton);
-    spiderWireframes.push(spiderWireFrame.clone());
-    scene.add(spiderWireFrame.clone());
+    let c = spiderWireFrame.clone();
+    spiderWireframes.push(c);
+    scene.add(c);
   }
 
   for (let i = 0; i < numberOfAnimals; i++) {
@@ -515,45 +474,11 @@ function initScene(){
 
     world.addBody(catSkeleton);
     catSkeletons.push(catSkeleton);
-    catWireframes.push(catWireFrame.clone());
-    scene.add(catWireFrame.clone);
+    let c = catWireFrame.clone();
+    catWireframes.push(c);
+    scene.add(c);
   }
 
-=======
-  /* construct basic wireframes to use when debugging */
-  spiderGeometry = new THREE.BoxGeometry(spiderWidth, spiderHeight, spiderDepth);
-  catGeometry = new THREE.BoxGeometry(catWidth, catHeight, catDepth);
-
-  spiderMaterial = new THREE.MeshBasicMaterial({
-    color: 0x00FFFF, //cyan
-    wireframe: true,
-  });
-  catMaterial = new THREE.MeshBasicMaterial({
-    color: 0x32CD32, //lime green
-    wireframe: true,
-  });
-
-  spiderWireFrame = new THREE.Mesh(spiderGeometry, spiderMaterial);
-  catWireFrame = new THREE.Mesh(catGeometry, catMaterial);
-
-  scene.add(spiderWireFrame, catWireFrame);
-
-  /* physical spider model */
-  spiderSkeleton = new CANNON.Body({
-    shape: new CANNON.Box(new CANNON.Vec3(spiderWidth / 2, spiderHeight / 2, spiderDepth / 2)),
-    position: new CANNON.Vec3(-55, 100, -40),
-    mass: 10,
-  });
-  world.addBody(spiderSkeleton);
-
-  /* physical cat model */ 
-  catSkeleton = new CANNON.Body({
-    shape: new CANNON.Box(new CANNON.Vec3(catWidth / 2, catHeight / 2, catDepth / 2)),
-    position: new CANNON.Vec3(-55, 10, -45),
-    mass: 10,
-  });
-  world.addBody(catSkeleton);
->>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
 
   // Crosshair
   const crosshair = mapLoader.load(crossHair);
@@ -674,7 +599,6 @@ function onWindowResize() {
 function debugMode(){
   //console.log(DEBUG_MODE);
   if(!DEBUG_MODE){
-<<<<<<< HEAD
     for(let i = 0; i < numberOfAnimals; ++i){
       scene.remove(catWireframes[i], spiderWireframes[i]);
     }
@@ -684,12 +608,6 @@ function debugMode(){
     for(let i = 0; i < numberOfAnimals; ++i){
       scene.add(catWireframes[i], spiderWireframes[i]);
     }
-=======
-    scene.remove(catWireFrame, spiderWireFrame);
-  }
-  else{
-    scene.add(catWireFrame, spiderWireFrame);
->>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
   }
 
 }
@@ -750,7 +668,6 @@ function animate() {
     world.step(timeStep);
     fuseMeshWithGeometry();
     debugMode();
-<<<<<<< HEAD
 
     for (let i = 0; i < catSkeletons.length; i++) {
 
@@ -765,7 +682,7 @@ function animate() {
       catClone.position.x += catMovementDirection.x * catSpeed;
       catClone.position.z += catMovementDirection.z * catSpeed;
       catClone.position.y += catMovementDirection.y * jumpSpeed;
-      console.log(catClone.velocity);
+      //console.log(catClone.velocity);
 
       //Optionally, we can add logic to change direction when reaching boundaries
       if (catClone.position.x > mapEdge) catMovementDirection.x = -Math.abs(catMovementDirection.x);
@@ -795,8 +712,6 @@ function animate() {
 
       spiderClone.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), (spiderAngle - Math.PI / 2));
     }
-=======
->>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
 
     raycaster.ray.origin.copy( controls.getObject().position );
     raycaster.ray.origin.y -= 10;
@@ -833,7 +748,6 @@ function animate() {
     controls.moveForward( - velocity.z * delta );
 
     /* Bound camera to map edges */
-<<<<<<< HEAD
     if(controls.getObject().position.x >= mapEdge + 5){
       controls.getObject().position.x = mapEdge + 5;
     }
@@ -849,23 +763,6 @@ function animate() {
 
     if(controls.getObject().position.z <= -mapEdge - 5){
       controls.getObject().position.z = -mapEdge - 5;
-=======
-    if(controls.getObject().position.x >= 495){
-      controls.getObject().position.x = 495;
-    }
-
-    if(controls.getObject().position.x <= -495){
-      controls.getObject().position.x = -495;
-    }
-
-    
-    if(controls.getObject().position.z >= 495){
-      controls.getObject().position.z = 495;
-    }
-
-    if(controls.getObject().position.z <= -495){
-      controls.getObject().position.z = -495;
->>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
     }
 
     controls.getObject().position.y += ( velocity.y * delta ); // new behavior

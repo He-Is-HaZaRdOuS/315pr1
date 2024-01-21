@@ -50,6 +50,9 @@ let numberOfAnimals = 20;
 
 let mapEdge;
 
+let score = 0;
+let health = 5;
+
 playerHeight = 10;
 playerWidth = 5;
 playerDepth = 5;
@@ -589,6 +592,40 @@ function pollInput(){
   document.addEventListener( 'keyup', onKeyUp );
 }
 
+function handleCatCollision(indexOfRemove) {
+  score += 1;
+  console.log("Score: " + score);
+
+  let model = catClones[indexOfRemove];
+  let skeleton = catSkeletons[indexOfRemove];
+  let wireframe = catWireframes[indexOfRemove];
+
+  scene.remove(model);
+  world.removeBody(skeleton);
+  scene.remove(wireframe);
+
+  catClones.splice(indexOfRemove, 1);
+  catSkeletons.splice(indexOfRemove, 1);
+  catWireframes.splice(indexOfRemove, 1);
+}
+
+function handleSpiderCollision(indexOfRemove) {
+  health -= 1;
+  console.log("Health: " + health)
+
+  let model = spiderClones[indexOfRemove];
+  let skeleton = spiderSkeletons[indexOfRemove];
+  let wireframe = spiderWireframes[indexOfRemove];
+
+  scene.remove(model);
+  world.removeBody(skeleton);
+  scene.remove(wireframe);
+
+  spiderClones.splice(indexOfRemove, 1);
+  spiderSkeletons.splice(indexOfRemove, 1);
+  spiderWireframes.splice(indexOfRemove, 1);
+}
+
 /* resize window */
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -599,15 +636,25 @@ function onWindowResize() {
 function debugMode(){
   //console.log(DEBUG_MODE);
   if(!DEBUG_MODE){
-    for(let i = 0; i < numberOfAnimals; ++i){
-      scene.remove(catWireframes[i], spiderWireframes[i]);
+    for(let i = 0; i < catSkeletons.length; ++i){
+      scene.remove(catWireframes[i]);
+    }
+
+    for(let i = 0; i < spiderSkeletons.length; ++i){
+      scene.remove(spiderWireframes[i]);
     }
     
   }
   else{
-    for(let i = 0; i < numberOfAnimals; ++i){
-      scene.add(catWireframes[i], spiderWireframes[i]);
+    for(let i = 0; i < catSkeletons.length; ++i){
+      scene.add(catWireframes[i]);
     }
+
+    for(let i = 0; i < spiderSkeletons.length; ++i){
+      scene.add(spiderWireframes[i]);
+    }
+
+
   }
 
 }
@@ -669,8 +716,9 @@ function animate() {
     fuseMeshWithGeometry();
     debugMode();
 
-    for (let i = 0; i < catSkeletons.length; i++) {
+    const playerPosition =playerSkeleton.position;
 
+    for (let i = 0; i < catSkeletons.length; i++) {
       //Cats
       const catClone = catSkeletons[i];
       const catMovementDirection = catMovements[i];
@@ -695,6 +743,18 @@ function animate() {
       const catAngle = Math.atan2(catMovementDirection.x, catMovementDirection.z);
       catClone.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), catAngle);
 
+      const catPosition = catSkeletons[i].position;
+      const distanceWithCat = playerPosition.distanceTo(catPosition);
+
+      if(distanceWithCat < 10) {
+        //collision handle
+        handleCatCollision(i);
+
+      }
+
+    }
+    
+    for(let i = 0; i < spiderSkeletons.length; i++) {
       //Spiders
       const spiderClone = spiderSkeletons[i];
       const spiderMovementDirection = spiderMovements[i];
@@ -711,6 +771,13 @@ function animate() {
       const spiderAngle = Math.atan2(spiderMovementDirection.x, spiderMovementDirection.z);
 
       spiderClone.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), (spiderAngle - Math.PI / 2));
+
+            const spiderPosition = spiderSkeletons[i].position;
+      const distanceWithSpider = playerPosition.distanceTo(spiderPosition);
+      
+      if(distanceWithSpider < 10) {
+        handleSpiderCollision(i);
+      } 
     }
 
     raycaster.ray.origin.copy( controls.getObject().position );

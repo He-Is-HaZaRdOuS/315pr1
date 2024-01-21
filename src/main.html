@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js - pointerlock controls</title>
+		<title>Kittens & Arthropods</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link type="text/css" rel="stylesheet" href="main.css">
@@ -26,19 +26,86 @@
 				font-size: 14px;
 				cursor: pointer;
 			}
+			#blocker_lost {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(0,0,0,0.5);
+			}
+
+			#instructions_lost {
+				width: 100%;
+				height: 100%;
+
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+
+				text-align: center;
+				font-size: 14px;
+				cursor: pointer;
+			}
+			#blocker_won {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(0,0,0,0.5);
+			}
+
+			#instructions_won {
+				width: 100%;
+				height: 100%;
+
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+
+				text-align: center;
+				font-size: 14px;
+				cursor: pointer;
+			}
 		</style>
 	</head>
 	<body>
+		<div id="health">Health: </div>
+		<div id="score">Score: </div>
 		<div id="blocker">
 			<div id="instructions">
 				<p style="font-size:36px">
-					Click to play
+					Left-click to play</br></br>
+					ESC to pause
 				</p>
 				<p>
+					Objective: Catch all the cats before the spiders bite you 5 times.</br>
+					</br>
+					Controls:
 					Move: WSAD<br/>
 					Jump: SPACE<br/>
 					Look: MOUSE<br/>
 					DEBUG_MODE: H Key
+				</p>
+			</div>
+		</div>
+		<div id="blocker_lost">
+			<div id="instructions_lost">
+				<p style="font-size:36px">
+					You Lost!
+				</p>
+				<p>
+					Press F5 to play again.</br>
+				</p>
+			</div>
+		</div>
+		<div id="blocker_won">
+			<div id="instructions_won">
+				<p style="font-size:36px">
+					You won!
+					
+				</p>
+				<p>
+					Press F5 to play again.</br>
 				</p>
 			</div>
 		</div>

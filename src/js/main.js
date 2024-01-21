@@ -29,6 +29,9 @@ import vintageMetallic from '../../resources/freepbr/vintage-tile1_metallic.png'
 import vintageNormal from '../../resources/freepbr/vintage-tile1_normal.png';
 import vintageRoughness from '../../resources/freepbr/vintage-tile1_roughness.png';
 
+const health_html = document.getElementById( 'health' );
+const score_html = document.getElementById( 'score' );
+
 /* Declare global vars */
 let raycaster;
 let camera, uiCamera, scene, uiScene, renderer, controls;
@@ -48,6 +51,8 @@ let playerHeight, playerWidth, playerDepth;
 
 let numberOfAnimals = 20;
 
+let EXIT = false;
+
 let mapEdge;
 
 let score = 0;
@@ -58,9 +63,6 @@ playerWidth = 5;
 playerDepth = 5;
 
 const initialJumpHeight = 1.0;
-const jumpSpeed = 0.1;
-const minHeight = 0.0;
-const maxHeight = 1.0;
 
 const objects = [];
 
@@ -300,7 +302,7 @@ function initScene(){
 
   playerModel = new THREE.Mesh(
     new THREE.BoxGeometry(playerWidth, playerHeight, playerDepth),
-    new THREE.MeshBasicMaterial({color: 0xFCBA03,})
+    new THREE.MeshBasicMaterial({color: 0xFCBA03,}) //orange
   );
   playerModel.castShadow = true;
   playerModel.receiveShadow = true;
@@ -396,9 +398,6 @@ function initScene(){
 
     for (let i = 0; i < numberOfAnimals; i++) {
       const spiderClone = spiderModel.clone();
-      const randomX = Math.random() * 100 - 50;
-      const randomZ = Math.random() * 100 - 50;
-      spiderClone.position.set(randomX, 0, randomZ);
       scene.add(spiderClone);
       spiderClones.push(spiderClone);
 
@@ -419,9 +418,6 @@ function initScene(){
 
     for (let i = 0; i < numberOfAnimals; i++) {
       const catClone = catModel.clone();
-      const randomX = Math.random() * 100 - 50;
-      const randomZ = Math.random() * 100 - 50;
-      catClone.position.set(randomX, 0, randomZ);
       scene.add(catClone);
       catClones.push(catClone);
 
@@ -451,8 +447,8 @@ function initScene(){
     catWireFrame = new THREE.Mesh(catGeometry, catMaterial);
 
   for (let i = 0; i < numberOfAnimals; i++) {
-    const randomX = Math.random() * 100 - 50;
-    const randomZ = Math.random() * 100 - 50;
+    const randomX = Math.random() * planeSize - mapEdge;
+    const randomZ = Math.random() * planeSize - mapEdge;
     const spiderSkeleton = new CANNON.Body({
       shape: new CANNON.Box(new CANNON.Vec3(5, 1, 5)),
       position: new CANNON.Vec3(randomX, 10, randomZ),
@@ -467,8 +463,8 @@ function initScene(){
   }
 
   for (let i = 0; i < numberOfAnimals; i++) {
-    const randomX = Math.random() * 100 - 50;
-    const randomZ = Math.random() * 100 - 50;
+    const randomX = Math.random() * planeSize - mapEdge;
+    const randomZ = Math.random() * planeSize - mapEdge;
     const catSkeleton = new CANNON.Body({
       shape: new CANNON.Box(new CANNON.Vec3(5, 1, 5)),
       position: new CANNON.Vec3(randomX, 10, randomZ),
@@ -501,7 +497,7 @@ function initLight(){
   const decay = 1.0;
 
   let light = new THREE.SpotLight(
-    0xFFFFFF, 300.0, distance, angle, penumbra, decay);
+    0xFFFFFF, 500.0, distance, angle, penumbra, decay);
   light.castShadow = true;
   light.shadow.bias = -0.00001;
   light.shadow.mapSize.width = 4096;
@@ -643,7 +639,8 @@ function debugMode(){
     for(let i = 0; i < spiderSkeletons.length; ++i){
       scene.remove(spiderWireframes[i]);
     }
-    
+
+    scene.remove(playerModel);
   }
   else{
     for(let i = 0; i < catSkeletons.length; ++i){
@@ -654,7 +651,7 @@ function debugMode(){
       scene.add(spiderWireframes[i]);
     }
 
-
+    scene.add(playerModel);
   }
 
 }
@@ -670,6 +667,16 @@ function init() {
   {
     const blocker = document.getElementById( 'blocker' );
     const instructions = document.getElementById( 'instructions' );
+
+    const blocker_lost = document.getElementById( 'blocker_lost' );
+    const instructions_lost = document.getElementById( 'instructions_lost' );
+    instructions_lost.style.display = 'none';
+    blocker_lost.style.display = 'none';
+
+    const blocker_won = document.getElementById( 'blocker_won' );
+    const instructions_won = document.getElementById( 'instructions_won' );
+    instructions_won.style.display = 'none';
+    blocker_won.style.display = 'none';
 
     /* start/focus game */
     instructions.addEventListener( 'click', function () {
@@ -710,11 +717,29 @@ function animate() {
 
   const time = performance.now();
 
-  if ( controls.isLocked === true ) {
+  /* Exit conditions: */
+  if( !EXIT && score >= numberOfAnimals){
+    controls.lock();
+    EXIT = true;
+    blocker_won.style.display = 'block';
+    instructions_won.style.display = '';
+    console.log("YOU WON!");
+  }
+  if( !EXIT && health <= 0){
+    controls.lock();
+    EXIT = true; 
+    blocker_lost.style.display = 'block';
+    instructions_lost.style.display = '';
+    console.log("YOU LOST!");
+  }
+
+  if ( !EXIT && controls.isLocked === true ) {
 
     world.step(timeStep);
     fuseMeshWithGeometry();
     debugMode();
+    health_html.textContent = "Health: " + health;
+    score_html.textContent = "Score: " + score;
 
     const playerPosition =playerSkeleton.position;
 
@@ -793,8 +818,8 @@ function animate() {
 
     const delta = ( time - prevTime ) / 1000;
 
-    velocity.x -= velocity.x * 2.0 * delta;
-    velocity.z -= velocity.z * 2.0 * delta;
+    velocity.x -= velocity.x * 5.0 * delta;
+    velocity.z -= velocity.z * 5.0 * delta;
 
     velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
 

@@ -38,8 +38,11 @@ let HWallHeight, HWallWidth, HWallDepth;
 let VWallHeight, VWallWidth, VWallDepth;
 let planeSkeleton, boxSkeleton, wall1Skeleton, wall2Skeleton, wall3Skeleton, wall4Skeleton;
 let planeGeometry, boxGeometry, wall1Geometry, wall2Geometry, wall3Geometry, wall4Geometry;
+<<<<<<< HEAD
+=======
 let spiderModel, catModel;
 let spiderSkeleton, catSkeleton;
+>>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
 let spiderGeometry, catGeometry;
 let spiderMaterial, catMaterial;
 let spiderWireFrame, catWireFrame;
@@ -48,18 +51,50 @@ let catHeight, catWidth, catDepth;
 let playerModel, playerSkeleton;
 let playerHeight, playerWidth, playerDepth;
 
+<<<<<<< HEAD
+let numberOfAnimals = 20;
+
+let mapEdge;
+
+playerHeight = 10;
+playerWidth = 5;
+playerDepth = 5;
+
+const initialJumpHeight = 1.0;
+const jumpSpeed = 0.1;
+const minHeight = 0.0;
+const maxHeight = 1.0;
+
+const objects = [];
+
+const catClones = [];
+const catMovements = [];
+const catSkeletons = [];
+const catWireframes = [];
+
+const spiderClones = [];
+const spiderMovements = [];
+const spiderSkeletons = [];
+const spiderWireframes = [];
+
+=======
 playerHeight = 10;
 playerWidth = 5;
 playerDepth = 5;
 
 const objects = [];
 
+>>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
 /* Assign values to vars */
 let DEBUG_MODE = false;
 
 let verticalJumpVelocityOffset = 250;
 
 planeSize = 1000;
+<<<<<<< HEAD
+mapEdge = (planeSize / 2) - 10;
+=======
+>>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
 cubeSize = 20;
 
 HWallWidth = 1000;
@@ -121,6 +156,29 @@ function fuseMeshWithGeometry(){
   wall4.position.copy(wall4Geometry.position);
   wall4.quaternion.copy(wall4Geometry.quaternion);
 
+<<<<<<< HEAD
+  playerModel.position.copy(playerSkeleton.position);
+  playerModel.quaternion.copy(playerSkeleton.quaternion);
+
+  playerSkeleton.position.copy(controls.getObject().position);
+  playerSkeleton.position.y = controls.getObject().position.y-10;
+
+  for(let i = 0; i < catSkeletons.length; ++i){
+    catClones[i].position.copy(catSkeletons[i].position);
+    catClones[i].quaternion.copy(catSkeletons[i].quaternion);
+    catWireframes[i].position.copy(catSkeletons[i].position);
+    catWireframes[i].position.y += catHeight / 2;
+    catWireframes[i].quaternion.copy(catSkeletons[i].quaternion);
+  }
+
+  for(let i = 0; i < spiderSkeletons.length; ++i){
+    spiderClones[i].position.copy(spiderSkeletons[i].position);
+    spiderClones[i].position.y -= spiderHeight / 2;
+    spiderClones[i].quaternion.copy(spiderSkeletons[i].quaternion);
+    spiderWireframes[i].position.copy(spiderSkeletons[i].position);
+    spiderWireframes[i].quaternion.copy(spiderSkeletons[i].quaternion);
+  }
+=======
   spiderModel.position.copy(spiderSkeleton.position);
   spiderModel.position.y-= spiderHeight / 2;
   spiderModel.quaternion.copy(spiderSkeleton.quaternion);
@@ -128,6 +186,7 @@ function fuseMeshWithGeometry(){
   catModel.position.copy(catSkeleton.position);
   catModel.position.y-= catHeight / 2;
   catModel.quaternion.copy(catSkeleton.quaternion);
+>>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
 
   spiderWireFrame.position.copy(spiderSkeleton.position);
   spiderWireFrame.quaternion.copy(spiderSkeleton.quaternion);
@@ -369,9 +428,21 @@ function initScene(){
 
   assetLoaderFBX.load(spiderURL.href, function(fbx){
     spiderModel = fbx;
-    scene.add(spiderModel);
+    //scene.add(spiderModel);
     //spiderModel.position.set(-55, 0, -55);
     //console.log("loaded!!!");
+
+    for (let i = 0; i < numberOfAnimals; i++) {
+      const spiderClone = spiderModel.clone();
+      const randomX = Math.random() * 100 - 50;
+      const randomZ = Math.random() * 100 - 50;
+      spiderClone.position.set(randomX, 0, randomZ);
+      scene.add(spiderClone);
+      spiderClones.push(spiderClone);
+
+      const movementDirection = new THREE.Vector3(Math.random() * 2 - 1, 0, Math.random() * 2 - 1).normalize();
+      spiderMovements.push(movementDirection);
+    }
   }, (xhr) => {
     console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
   }, function(error){
@@ -380,15 +451,75 @@ function initScene(){
 
   assetLoaderFBX.load(catURL.href, function(fbx){
     catModel = fbx;
-    scene.add(catModel);
+    //scene.add(catModel);
     //catModel.position.set(-40, 0, -55);
     //console.log("loaded!!!");
+
+    for (let i = 0; i < numberOfAnimals; i++) {
+      const catClone = catModel.clone();
+      const randomX = Math.random() * 100 - 50;
+      const randomZ = Math.random() * 100 - 50;
+      catClone.position.set(randomX, 0, randomZ);
+      scene.add(catClone);
+      catClones.push(catClone);
+
+      const movementDirection = new THREE.Vector3(Math.random() * 2 - 1, 0.5, Math.random() * 2 - 1).normalize();
+      catMovements.push(movementDirection);
+    }
   }, (xhr) => {
     console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
   }, function(error){
     console.error(error);
   });
 
+<<<<<<< HEAD
+    /* construct basic wireframes to use when debugging */
+    spiderGeometry = new THREE.BoxGeometry(spiderWidth, spiderHeight, spiderDepth);
+    catGeometry = new THREE.BoxGeometry(catWidth, catHeight, catDepth);
+  
+    spiderMaterial = new THREE.MeshBasicMaterial({
+      color: 0x00FFFF, //cyan
+      wireframe: true,
+    });
+    catMaterial = new THREE.MeshBasicMaterial({
+      color: 0x32CD32, //lime green
+      wireframe: true,
+    });
+  
+    spiderWireFrame = new THREE.Mesh(spiderGeometry, spiderMaterial);
+    catWireFrame = new THREE.Mesh(catGeometry, catMaterial);
+
+  for (let i = 0; i < numberOfAnimals; i++) {
+    const randomX = Math.random() * 100 - 50;
+    const randomZ = Math.random() * 100 - 50;
+    const spiderSkeleton = new CANNON.Body({
+      shape: new CANNON.Box(new CANNON.Vec3(5, 1, 5)),
+      position: new CANNON.Vec3(randomX, 10, randomZ),
+      mass: 7,
+    });
+
+    world.addBody(spiderSkeleton);
+    spiderSkeletons.push(spiderSkeleton);
+    spiderWireframes.push(spiderWireFrame.clone());
+    scene.add(spiderWireFrame.clone());
+  }
+
+  for (let i = 0; i < numberOfAnimals; i++) {
+    const randomX = Math.random() * 100 - 50;
+    const randomZ = Math.random() * 100 - 50;
+    const catSkeleton = new CANNON.Body({
+      shape: new CANNON.Box(new CANNON.Vec3(5, 1, 5)),
+      position: new CANNON.Vec3(randomX, 10, randomZ),
+      mass: 10,
+    });
+
+    world.addBody(catSkeleton);
+    catSkeletons.push(catSkeleton);
+    catWireframes.push(catWireFrame.clone());
+    scene.add(catWireFrame.clone);
+  }
+
+=======
   /* construct basic wireframes to use when debugging */
   spiderGeometry = new THREE.BoxGeometry(spiderWidth, spiderHeight, spiderDepth);
   catGeometry = new THREE.BoxGeometry(catWidth, catHeight, catDepth);
@@ -422,6 +553,7 @@ function initScene(){
     mass: 10,
   });
   world.addBody(catSkeleton);
+>>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
 
   // Crosshair
   const crosshair = mapLoader.load(crossHair);
@@ -542,10 +674,22 @@ function onWindowResize() {
 function debugMode(){
   //console.log(DEBUG_MODE);
   if(!DEBUG_MODE){
+<<<<<<< HEAD
+    for(let i = 0; i < numberOfAnimals; ++i){
+      scene.remove(catWireframes[i], spiderWireframes[i]);
+    }
+    
+  }
+  else{
+    for(let i = 0; i < numberOfAnimals; ++i){
+      scene.add(catWireframes[i], spiderWireframes[i]);
+    }
+=======
     scene.remove(catWireFrame, spiderWireFrame);
   }
   else{
     scene.add(catWireFrame, spiderWireFrame);
+>>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
   }
 
 }
@@ -606,6 +750,53 @@ function animate() {
     world.step(timeStep);
     fuseMeshWithGeometry();
     debugMode();
+<<<<<<< HEAD
+
+    for (let i = 0; i < catSkeletons.length; i++) {
+
+      //Cats
+      const catClone = catSkeletons[i];
+      const catMovementDirection = catMovements[i];
+
+      //adjust the speed by multiplying the movement direction by a scalar
+      const catSpeed = 0.3;
+      const jumpSpeed = 0.2;
+
+      catClone.position.x += catMovementDirection.x * catSpeed;
+      catClone.position.z += catMovementDirection.z * catSpeed;
+      catClone.position.y += catMovementDirection.y * jumpSpeed;
+      console.log(catClone.velocity);
+
+      //Optionally, we can add logic to change direction when reaching boundaries
+      if (catClone.position.x > mapEdge) catMovementDirection.x = -Math.abs(catMovementDirection.x);
+      if (catClone.position.x < -mapEdge) catMovementDirection.x = Math.abs(catMovementDirection.x);
+      if (catClone.position.z > mapEdge) catMovementDirection.z = -Math.abs(catMovementDirection.z);
+      if (catClone.position.z < -mapEdge) catMovementDirection.z = Math.abs(catMovementDirection.z);
+      if (catClone.position.y >= catHeight + initialJumpHeight) catMovementDirection.y = -Math.abs(catMovementDirection.y);
+      if (catClone.position.y <= catHeight) catMovementDirection.y = Math.abs(catMovementDirection.y);
+
+      const catAngle = Math.atan2(catMovementDirection.x, catMovementDirection.z);
+      catClone.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), catAngle);
+
+      //Spiders
+      const spiderClone = spiderSkeletons[i];
+      const spiderMovementDirection = spiderMovements[i];
+
+      const spiderSpeed = 0.2;
+      spiderClone.position.x += spiderMovementDirection.x * spiderSpeed;
+      spiderClone.position.z += spiderMovementDirection.z * spiderSpeed;
+
+      if (spiderClone.position.x > mapEdge) spiderMovementDirection.x = -Math.abs(spiderMovementDirection.x);
+      if (spiderClone.position.x < -mapEdge) spiderMovementDirection.x = Math.abs(spiderMovementDirection.x);
+      if (spiderClone.position.z > mapEdge) spiderMovementDirection.z = -Math.abs(spiderMovementDirection.z);
+      if (spiderClone.position.z < -mapEdge) spiderMovementDirection.z = Math.abs(spiderMovementDirection.z);
+
+      const spiderAngle = Math.atan2(spiderMovementDirection.x, spiderMovementDirection.z);
+
+      spiderClone.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), (spiderAngle - Math.PI / 2));
+    }
+=======
+>>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
 
     raycaster.ray.origin.copy( controls.getObject().position );
     raycaster.ray.origin.y -= 10;
@@ -642,6 +833,23 @@ function animate() {
     controls.moveForward( - velocity.z * delta );
 
     /* Bound camera to map edges */
+<<<<<<< HEAD
+    if(controls.getObject().position.x >= mapEdge + 5){
+      controls.getObject().position.x = mapEdge + 5;
+    }
+
+    if(controls.getObject().position.x <= -mapEdge - 5){
+      controls.getObject().position.x = -mapEdge - 5;
+    }
+
+    
+    if(controls.getObject().position.z >= mapEdge + 5){
+      controls.getObject().position.z = mapEdge + 5;
+    }
+
+    if(controls.getObject().position.z <= -mapEdge - 5){
+      controls.getObject().position.z = -mapEdge - 5;
+=======
     if(controls.getObject().position.x >= 495){
       controls.getObject().position.x = 495;
     }
@@ -657,6 +865,7 @@ function animate() {
 
     if(controls.getObject().position.z <= -495){
       controls.getObject().position.z = -495;
+>>>>>>> 1d2311c2a89e9bcc3b1f458000b30394d76c773d
     }
 
     controls.getObject().position.y += ( velocity.y * delta ); // new behavior

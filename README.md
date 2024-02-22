@@ -8,13 +8,13 @@ placeholder repository for CENG315's final assignment. </br>
 https://nodejs.org/en/download/ </br>
 ### (Ubuntu Linux)
 https://linuxize.com/post/how-to-install-node-js-on-ubuntu-20-04/ </br> </br>
-4. cd into the project root.
+3. cd into the project root.
 
 ```bash
 cd 315pr1
 ```
 </br>
-5. Run the commands below to install dependencies.
+4. Run the commands below to install dependencies.
 
 ```bash
 npm install cannon-es
@@ -22,16 +22,28 @@ npm install parcel
 npm install three
 ```
 </br>
-6. Start a local server using parcel.
+5. Start a local server using parcel.
    
 ```bash
 npx parcel src/main.html --port 3000
 ``` 
 CTRL + C to terminate it. <br>
 If localhost refused to connect, change the port and try again. </br> </br>
-7. Open the generated http link in your browser. </br> </br>
-8. ??? </br> </br>
-9. Profit! </br> </br>
+6. Open the generated http link in your browser. </br> </br>
+7. ??? </br> </br>
+8. Profit! </br> </br>
+
+# Screenshots
+Splash Screen
+![Alt](screenshots/splash.png)
+Game snippet 1
+![Alt](screenshots/ex1.png)
+Game snippet 2 (flung cube)
+![Alt](screenshots/ex2.png)
+Death/loss screen
+![Alt](screenshots/death.png)
+Win screen
+![Alt](screenshots/win.png)
 
 ## TODO
 - [x] Establish Solid 2D Plane.
